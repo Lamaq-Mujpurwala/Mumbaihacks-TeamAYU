@@ -161,27 +161,26 @@ def get_liabilities_summary(user_id: int) -> dict:
     loans = get_user_loans(user_id)
     credit_cards = get_user_credit_cards(user_id)
     
-    total_loan_balance = sum(l['remaining_balance'] for l in loans) if loans else 0
-    total_credit_due = sum(cc['current_balance'] for cc in credit_cards) if credit_cards else 0
+    total_loan_balance = sum(l['principal_amount'] for l in loans) if loans else 0
+    total_credit_due = sum(cc['outstanding_amount'] for cc in credit_cards) if credit_cards else 0
     total_liabilities = total_loan_balance + total_credit_due
     
     loan_details = []
     for loan in loans:
         loan_details.append({
-            "type": loan['loan_type'],
-            "original_amount": loan['principal_amount'],
-            "remaining": loan['remaining_balance'],
+            "name": loan['name'],
+            "principal_amount": loan['principal_amount'],
             "emi": loan['emi_amount'],
-            "interest_rate": loan['interest_rate']
+            "next_due_date": loan.get('next_due_date', 'Not set')
         })
     
     cc_details = []
     for cc in credit_cards:
         cc_details.append({
             "name": cc['card_name'],
-            "limit": cc['credit_limit'],
-            "current_balance": cc['current_balance'],
-            "available": cc['credit_limit'] - cc['current_balance'],
+            "limit": cc['limit_amount'],
+            "outstanding": cc['outstanding_amount'],
+            "available": cc['limit_amount'] - cc['outstanding_amount'],
             "due_date": cc.get('due_date', 'Not set')
         })
     
@@ -229,8 +228,8 @@ def get_financial_snapshot(user_id: int) -> dict:
     loans = get_user_loans(user_id)
     credit_cards = get_user_credit_cards(user_id)
     
-    total_loan_balance = sum(l['remaining_balance'] for l in loans) if loans else 0
-    total_credit_due = sum(cc['current_balance'] for cc in credit_cards) if credit_cards else 0
+    total_loan_balance = sum(l['principal_amount'] for l in loans) if loans else 0
+    total_credit_due = sum(cc['outstanding_amount'] for cc in credit_cards) if credit_cards else 0
     
     return {
         "status": "success",

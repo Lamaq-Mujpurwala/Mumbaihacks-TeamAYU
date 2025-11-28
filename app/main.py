@@ -429,8 +429,8 @@ async def get_snapshot(user_id: int):
     total_goals_target = sum(g['target_amount'] for g in goals)
     total_goals_saved = sum(g['current_amount'] for g in goals)
     total_budget = sum(b['amount_limit'] for b in budgets)
-    total_loan_balance = sum(l['remaining_balance'] for l in loans) if loans else 0
-    total_cc_due = sum(cc['current_balance'] for cc in credit_cards) if credit_cards else 0
+    total_loan_balance = sum(l['principal_amount'] for l in loans) if loans else 0
+    total_cc_due = sum(cc['outstanding_amount'] for cc in credit_cards) if credit_cards else 0
     
     return {
         "user_id": user_id,
@@ -456,8 +456,8 @@ async def get_liabilities(user_id: int):
     loans = db.get_user_loans(user_id)
     credit_cards = db.get_user_credit_cards(user_id)
     
-    total_loan_balance = sum(l['remaining_balance'] for l in loans) if loans else 0
-    total_cc_due = sum(cc['current_balance'] for cc in credit_cards) if credit_cards else 0
+    total_loan_balance = sum(l['principal_amount'] for l in loans) if loans else 0
+    total_cc_due = sum(cc['outstanding_amount'] for cc in credit_cards) if credit_cards else 0
     
     return {
         "loans": loans,

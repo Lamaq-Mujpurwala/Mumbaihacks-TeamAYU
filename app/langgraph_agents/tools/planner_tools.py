@@ -3,7 +3,7 @@ Planner Agent Tools
 Tools for managing budgets and savings goals.
 """
 
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 from langchain_core.tools import tool
 
@@ -24,7 +24,7 @@ from app.core import (
 # ==================== BUDGET TOOLS ====================
 
 @tool
-def set_budget(user_id: int, category_name: str, amount: float, month: str = None) -> dict:
+def set_budget(user_id: Union[int, str], category_name: str, amount: Union[int, float, str], month: str = None) -> dict:
     """
     Set or update a monthly budget for a specific category.
     
@@ -60,7 +60,7 @@ def set_budget(user_id: int, category_name: str, amount: float, month: str = Non
 
 
 @tool
-def remove_budget(user_id: int, category_name: str, month: str = None) -> dict:
+def remove_budget(user_id: Union[int, str], category_name: str, month: str = None) -> dict:
     """
     Remove/delete a budget for a specific category.
     
@@ -95,7 +95,7 @@ def remove_budget(user_id: int, category_name: str, month: str = None) -> dict:
 
 
 @tool
-def check_budget_status(user_id: int, month: str = None) -> dict:
+def check_budget_status(user_id: Union[int, str], month: str = None) -> dict:
     """
     Check the status of all budgets for a month - shows spent vs limit.
     
@@ -187,7 +187,7 @@ def check_budget_status(user_id: int, month: str = None) -> dict:
 # ==================== GOAL TOOLS ====================
 
 @tool
-def create_savings_goal(user_id: int, name: str, target_amount: float, target_date: str = None) -> dict:
+def create_savings_goal(user_id: Union[int, str], name: str, target_amount: Union[int, float, str], target_date: str = None) -> dict:
     """
     Create a new savings goal.
     
@@ -216,7 +216,7 @@ def create_savings_goal(user_id: int, name: str, target_amount: float, target_da
 
 
 @tool
-def add_to_goal(user_id: int, goal_id: int, amount: float) -> dict:
+def add_to_goal(user_id: Union[int, str], goal_id: Union[int, str], amount: Union[int, float, str]) -> dict:
     """
     Add funds/progress to an existing savings goal.
     
@@ -263,7 +263,7 @@ def add_to_goal(user_id: int, goal_id: int, amount: float) -> dict:
 
 
 @tool
-def remove_goal(user_id: int, goal_id: int) -> dict:
+def remove_goal(user_id: Union[int, str], goal_id: Union[int, str]) -> dict:
     """
     Delete a savings goal.
     
@@ -292,7 +292,7 @@ def remove_goal(user_id: int, goal_id: int) -> dict:
 
 
 @tool
-def get_goals_status(user_id: int) -> dict:
+def get_goals_status(user_id: Union[int, str]) -> dict:
     """
     Get the status of all savings goals.
     

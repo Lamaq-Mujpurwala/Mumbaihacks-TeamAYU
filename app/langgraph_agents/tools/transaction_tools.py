@@ -3,7 +3,7 @@ Transaction Agent Tools
 Tools for managing manual transactions and viewing liabilities.
 """
 
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 from langchain_core.tools import tool
 
@@ -18,12 +18,12 @@ from app.core import (
 
 
 @tool
-def add_expense(user_id: int, amount: float, category_name: str, description: str = None, date: str = None) -> dict:
+def add_expense(user_id: Union[int, str], amount: Union[int, float, str], category_name: str, description: str = None, date: str = None) -> dict:
     """
     Record a manual expense/purchase.
     
     Args:
-        user_id: The user's ID
+        user_id: The user's ID (number)
         amount: Amount spent in INR
         category_name: Category (e.g., "Shopping", "Electronics", "Food & Dining")
         description: Optional description of the purchase
@@ -59,12 +59,12 @@ def add_expense(user_id: int, amount: float, category_name: str, description: st
 
 
 @tool
-def add_income(user_id: int, amount: float, source: str, description: str = None, date: str = None) -> dict:
+def add_income(user_id: Union[int, str], amount: Union[int, float, str], source: str, description: str = None, date: str = None) -> dict:
     """
     Record a manual income entry.
     
     Args:
-        user_id: The user's ID
+        user_id: The user's ID (number)
         amount: Amount received in INR
         source: Source of income (e.g., "Salary", "Freelance", "Gift")
         description: Optional description
@@ -105,12 +105,12 @@ def add_income(user_id: int, amount: float, source: str, description: str = None
 
 
 @tool
-def get_recent_transactions(user_id: int, limit: int = 10) -> dict:
+def get_recent_transactions(user_id: Union[int, str], limit: Union[int, str] = 10) -> dict:
     """
     Get recent transactions for the user.
     
     Args:
-        user_id: The user's ID
+        user_id: The user's ID (number)
         limit: Number of transactions to return (default 10)
     
     Returns:
@@ -146,12 +146,12 @@ def get_recent_transactions(user_id: int, limit: int = 10) -> dict:
 
 
 @tool
-def get_liabilities_summary(user_id: int) -> dict:
+def get_liabilities_summary(user_id: Union[int, str]) -> dict:
     """
     Get summary of all liabilities (loans, credit cards).
     
     Args:
-        user_id: The user's ID
+        user_id: The user's ID (number)
     
     Returns:
         Dict with loans and credit card details
@@ -201,17 +201,19 @@ def get_liabilities_summary(user_id: int) -> dict:
 
 
 @tool
-def get_financial_snapshot(user_id: int) -> dict:
+def get_financial_snapshot(user_id: Union[int, str]) -> dict:
     """
     Get a quick financial snapshot - recent spending, income, and liabilities.
     
     Args:
-        user_id: The user's ID
+        user_id: The user's ID (number)
     
     Returns:
         Dict with comprehensive financial snapshot
     """
     from datetime import datetime, timedelta
+    
+    user_id = int(user_id)
     
     # Get transactions from last 30 days
     transactions = get_user_transactions(user_id, limit=100)

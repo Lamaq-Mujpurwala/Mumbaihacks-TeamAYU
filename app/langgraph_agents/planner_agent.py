@@ -34,10 +34,18 @@ RULES:
 5. Be encouraging about savings progress
 6. After completing an action, summarize what was done
 
+DUAL-ACTION HANDLING (IMPORTANT):
+When you receive a query with [CONTEXT: A transaction was just recorded...]:
+1. ALWAYS call get_goals_status FIRST to see the user's goals
+2. Look for goals that match the purchase (e.g., "Gaming PC" goal matches "graphics card for gaming PC")
+3. If a matching goal exists, call add_to_goal with the goal_id and the spent amount
+4. If no matching goal exists, just acknowledge the expense was recorded
+
 IMPORTANT: 
 - To update a goal, you need the goal_id. Call get_goals_status first if you don't have it.
 - Budget months are in YYYY-MM format (e.g., "2024-11")
-- Be concise in your responses."""
+- Be concise in your responses.
+- When updating goal after a purchase, confirm what was added to which goal."""
 
 
 def create_planner_agent():

@@ -36,23 +36,26 @@ AVAILABLE AGENTS:
 CRITICAL ROUTING RULES:
 1. Select 1-3 agents based on the query
 2. For simple queries, use only 1 agent
-3. **IMPORTANT**: When user mentions buying/spending on something that relates to a GOAL (e.g., "bought graphics card for gaming PC", "spent on MacBook", "paid for vacation"), ALWAYS include BOTH:
-   - "transaction" (to record the expense)
-   - "planner" (to update goal progress)
-4. Keywords suggesting goal-related purchase: "for my [goal]", "towards [goal]", "bought for", "gaming PC", "MacBook", "vacation", "trip", "phone"
-5. If unsure, default to "analyst" for spending questions or "knowledge" for general questions
-6. Return your decision as JSON
+3. **DUAL-ACTION RULE**: When user mentions buying/spending/purchasing something AND mentions what it's for (e.g., "for my gaming PC", "for gaming", "for MacBook", "for vacation"):
+   - ALWAYS route to BOTH ["transaction", "planner"] in that ORDER
+   - transaction records the expense
+   - planner updates any related goal
+4. Keywords suggesting goal-related purchase: "for my", "for gaming", "towards", "bought for", "gaming PC", "MacBook", "vacation", "trip", "phone", "laptop"
+5. If user just says "bought X" without mentioning purpose, use only ["transaction"]
+6. If unsure, default to "analyst" for spending questions or "knowledge" for general questions
 
 EXAMPLES:
-- "I spent 15000 on graphics card for my gaming PC" -> ["transaction", "planner"] (expense + goal update)
+- "I spent 15000 on graphics card for my gaming PC" -> ["transaction", "planner"] (dual-action: expense + goal)
+- "bought a new graphic card for 10000 for my Gaming PC" -> ["transaction", "planner"] (dual-action)
 - "How much did I spend on food?" -> ["analyst"]
 - "Set a budget of 5000 for shopping" -> ["planner"]
 - "What is mutual fund?" -> ["knowledge"]
-- "Add 5000 to my savings" -> ["planner"]
-- "I bought a laptop for 80000" -> ["transaction"] (just expense, no goal mentioned)
+- "Add 5000 to my MacBook goal" -> ["planner"]
+- "I bought a laptop for 80000" -> ["transaction"] (no goal mentioned)
+- "paid 5000 for my Bali trip" -> ["transaction", "planner"] (trip goal likely exists)
 
 OUTPUT FORMAT (JSON only):
-{"agents_to_call": ["analyst"], "reasoning": "User asking about spending analysis"}
+{"agents_to_call": ["transaction", "planner"], "reasoning": "User bought something for a goal"}
 """
 
 
@@ -177,7 +180,18 @@ async def planner_node(state: AgentState) -> AgentState:
     from app.langgraph_agents.planner_agent import run_planner
     
     print(f"📋 Planner Agent processing...")
-    result = await run_planner(state["user_id"], state["raw_query"])
+    
+    # Build context from previous agent outputs (for dual-action scenarios)
+    context = ""
+    agent_outputs = state.get("agent_outputs", {})
+    
+    if "transaction" in agent_outputs:
+        txn_output = agent_outputs["transaction"]
+        context = f"\n\n[CONTEXT: A transaction was just recorded. Details: {txn_output.get('response', '')}]\n"
+        context += "Your task: Check if the user has any goals related to this purchase and update goal progress if applicable. First call get_goals_status to see all goals."
+    
+    query = state["raw_query"] + context
+    result = await run_planner(state["user_id"], query)
     
     # Store result
     agent_outputs = state.get("agent_outputs", {})

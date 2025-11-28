@@ -38,14 +38,14 @@ IMPORTANT: After receiving tool results, provide your analysis and END your resp
 def create_analyst_agent():
     """Create the Analyst Agent with ReAct pattern"""
     
-    # Initialize LLM
+    # Initialize LLM - Using llama-scout (30k TPM) to avoid rate limits
+    # gpt-oss (8k TPM) is reserved for supervisor + planner
     api_key = os.environ.get("GROQ_API_KEY")
-    print(api_key)
     if not api_key:
         raise RuntimeError("GROQ_API_KEY not found in environment")
     
     llm = ChatGroq(
-        model="openai/gpt-oss-20b",
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         temperature=0,
         groq_api_key=api_key
     )

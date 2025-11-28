@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git
+.git/
+.gitignore
+
+# Build
+*.egg-info/
+dist/
+build/
+
+# Local data (will be regenerated)
+*.db
+*.sqlite
+data/
+
+# Misc
+*.log
+*.md
+!README.md
+.DS_Store
+Thumbs.db

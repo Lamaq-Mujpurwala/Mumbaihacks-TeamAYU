@@ -195,13 +195,13 @@ def seed_data():
 
     # 6. Create Goals
     goal1_id = db.save_goal(user_id, "MacBook Pro", 200000, (datetime.now() + timedelta(days=180)).strftime("%Y-%m-%d"))
-    db.update_goal_progress(goal1_id, 45000)
+    db.update_goal_progress(user_id, goal1_id, 45000)
     
     goal2_id = db.save_goal(user_id, "Bali Trip", 100000, (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"))
-    db.update_goal_progress(goal2_id, 15000)
+    db.update_goal_progress(user_id, goal2_id, 15000)
     
     goal3_id = db.save_goal(user_id, "Emergency Fund", 500000, None)
-    db.update_goal_progress(goal3_id, 125000)
+    db.update_goal_progress(user_id, goal3_id, 125000)
     print("✅ Goals Created: 3")
 
     # 7. Create Liabilities

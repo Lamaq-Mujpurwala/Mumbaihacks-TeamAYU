@@ -344,11 +344,18 @@ def save_goal(user_id: int, name: str, target_amount: float, target_date: str = 
         return cursor.lastrowid
 
 
-def update_goal_progress(goal_id: int, new_amount: float):
-    """Update goal progress"""
+def update_goal_progress(user_id: int, goal_id: int, amount_to_add: float) -> bool:
+    """Add amount to goal progress (incremental update)"""
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute('UPDATE goals SET current_amount = ? WHERE id = ?', (new_amount, goal_id))
+        # Get current amount first
+        cursor.execute('SELECT current_amount FROM goals WHERE id = ? AND user_id = ?', (goal_id, user_id))
+        row = cursor.fetchone()
+        if not row:
+            return False
+        new_amount = row['current_amount'] + amount_to_add
+        cursor.execute('UPDATE goals SET current_amount = ? WHERE id = ? AND user_id = ?', (new_amount, goal_id, user_id))
+        return cursor.rowcount > 0
 
 
 def delete_goal(user_id: int, goal_id: int) -> bool:

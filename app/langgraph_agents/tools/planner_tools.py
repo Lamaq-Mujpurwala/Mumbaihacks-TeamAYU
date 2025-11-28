@@ -226,9 +226,13 @@ def add_to_goal(user_id: int, goal_id: int, amount: float) -> dict:
             "message": f"Goal with ID {goal_id} not found"
         }
     
-    new_amount = target_goal['current_amount'] + amount
-    update_goal_progress(goal_id, new_amount)
+    # Use incremental update
+    success = update_goal_progress(user_id, goal_id, amount)
     
+    if not success:
+        return {"status": "error", "message": "Failed to update goal"}
+    
+    new_amount = target_goal['current_amount'] + amount
     percent = round(new_amount / target_goal['target_amount'] * 100, 1)
     
     return {

@@ -63,7 +63,7 @@ def create_router_llm():
         raise RuntimeError("GROQ_API_KEY not found")
     
     return ChatGroq(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-20b",
         temperature=0,
         groq_api_key=api_key
     )
@@ -146,14 +146,18 @@ async def analyst_node(state: AgentState) -> AgentState:
 
 
 async def knowledge_node(state: AgentState) -> AgentState:
-    """Execute the knowledge agent (placeholder for now)"""
-    print(f"📚 Knowledge Agent processing...")
+    """Execute the knowledge agent"""
+    from app.langgraph_agents.knowledge_agent import run_knowledge
     
-    # Placeholder response - will implement in Step 4
+    print(f"📚 Knowledge Agent processing...")
+    result = await run_knowledge(state["user_id"], state["raw_query"])
+    
+    # Store result
     agent_outputs = state.get("agent_outputs", {})
     agent_outputs["knowledge"] = {
-        "response": "Knowledge agent not yet implemented. Please ask about spending analysis for now.",
-        "tool_calls": []
+        "response": result["response"],
+        "tool_calls": result["tool_calls"],
+        "sources": result.get("sources", [])
     }
     
     completed = state.get("completed_agents", []) + ["knowledge"]

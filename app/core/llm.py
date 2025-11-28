@@ -25,7 +25,7 @@ class LLMClient:
             self.client = None
         else:
             self.client = Groq(api_key=api_key)
-        self.model = "llama-3.3-70b-versatile"
+        self.model = "openai/gpt-oss-20b"
         
     def is_available(self) -> bool:
         return self.client is not None

@@ -32,6 +32,10 @@ def add_expense(user_id: int, amount: float, category_name: str, description: st
     Returns:
         Dict with status and transaction details
     """
+    # Coerce types (Groq sometimes passes strings)
+    user_id = int(user_id)
+    amount = float(amount)
+    
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
     
@@ -69,6 +73,9 @@ def add_income(user_id: int, amount: float, source: str, description: str = None
     Returns:
         Dict with status and transaction details
     """
+    user_id = int(user_id)
+    amount = float(amount)
+    
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
     
@@ -109,6 +116,9 @@ def get_recent_transactions(user_id: int, limit: int = 10) -> dict:
     Returns:
         Dict with list of recent transactions
     """
+    user_id = int(user_id)
+    limit = int(limit)
+    
     transactions = get_user_transactions(user_id, limit=limit)
     
     if not transactions:
@@ -146,6 +156,8 @@ def get_liabilities_summary(user_id: int) -> dict:
     Returns:
         Dict with loans and credit card details
     """
+    user_id = int(user_id)
+    
     loans = get_user_loans(user_id)
     credit_cards = get_user_credit_cards(user_id)
     

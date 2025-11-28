@@ -22,6 +22,9 @@ def get_spending_breakdown(user_id: int, days: int = 30, category: Optional[str]
     Returns:
         Dict with total_spent, categories breakdown, and insights
     """
+    # Coerce types (Groq sometimes passes strings)
+    user_id = int(user_id)
+    days = int(days)
     return analytics.analyze_spending_patterns(user_id, days, category)
 
 
@@ -37,6 +40,8 @@ def detect_spending_anomalies(user_id: int, days: int = 30) -> dict:
     Returns:
         Dict with anomalies list and insights about unusual spending
     """
+    user_id = int(user_id)
+    days = int(days)
     return analytics.detect_anomalies(user_id, days)
 
 
@@ -52,6 +57,8 @@ def forecast_balance(user_id: int, days: int = 30) -> dict:
     Returns:
         Dict with projected_balance and trend analysis
     """
+    user_id = int(user_id)
+    days = int(days)
     return analytics.forecast_cash_flow(user_id, days)
 
 

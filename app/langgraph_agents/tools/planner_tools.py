@@ -37,6 +37,10 @@ def set_budget(user_id: int, category_name: str, amount: float, month: str = Non
     Returns:
         Dict with status and budget details
     """
+    # Coerce types (Groq sometimes passes strings)
+    user_id = int(user_id)
+    amount = float(amount)
+    
     if not month:
         month = datetime.now().strftime("%Y-%m")
     
@@ -68,6 +72,8 @@ def remove_budget(user_id: int, category_name: str, month: str = None) -> dict:
     Returns:
         Dict with status message
     """
+    user_id = int(user_id)
+    
     if not month:
         month = datetime.now().strftime("%Y-%m")
     
@@ -100,6 +106,8 @@ def check_budget_status(user_id: int, month: str = None) -> dict:
     Returns:
         Dict with budget analysis for each category
     """
+    user_id = int(user_id)
+    
     if not month:
         month = datetime.now().strftime("%Y-%m")
     
@@ -192,6 +200,9 @@ def create_savings_goal(user_id: int, name: str, target_amount: float, target_da
     Returns:
         Dict with status and goal details
     """
+    user_id = int(user_id)
+    target_amount = float(target_amount)
+    
     goal_id = save_goal(user_id, name, target_amount, target_date)
     
     return {
@@ -217,6 +228,10 @@ def add_to_goal(user_id: int, goal_id: int, amount: float) -> dict:
     Returns:
         Dict with updated goal status
     """
+    user_id = int(user_id)
+    goal_id = int(goal_id)
+    amount = float(amount)
+    
     goals = get_user_goals(user_id)
     target_goal = next((g for g in goals if g['id'] == goal_id), None)
     
@@ -259,6 +274,9 @@ def remove_goal(user_id: int, goal_id: int) -> dict:
     Returns:
         Dict with status message
     """
+    user_id = int(user_id)
+    goal_id = int(goal_id)
+    
     success = delete_goal(user_id, goal_id)
     
     if success:
@@ -284,6 +302,8 @@ def get_goals_status(user_id: int) -> dict:
     Returns:
         Dict with all goals and their progress
     """
+    user_id = int(user_id)
+    
     goals = get_user_goals(user_id)
     
     if not goals:

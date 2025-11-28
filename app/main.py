@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Financial Guardian AI",
     description="Multi-Agent Financial System Backend (LangGraph)",
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan
 )
 

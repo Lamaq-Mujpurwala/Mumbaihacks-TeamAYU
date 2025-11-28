@@ -62,6 +62,54 @@ class LLMClient:
             print(f"❌ LLM Error: {str(e)}")
             raise e
 
+    def generate_vision_response(
+        self,
+        prompt: str,
+        base64_image: str,
+        temperature: float = 0.1
+    ) -> str:
+        """
+        Generate a response from the Vision LLM (OpenAI GPT-4o).
+        Used for receipt scanning and image analysis.
+        """
+        from openai import OpenAI
+        
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY not found in environment variables.")
+             
+        try:
+            client = OpenAI(api_key=api_key)
+            
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                temperature=temperature,
+                max_tokens=1024
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            print(f"❌ Vision LLM Error: {str(e)}")
+            raise e
+
 
 # Global instance
 llm_client = LLMClient()

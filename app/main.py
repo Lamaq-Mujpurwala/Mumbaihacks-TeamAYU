@@ -474,6 +474,13 @@ app.include_router(data_router)
 app.include_router(agent_router)
 app.include_router(ui_router)
 
+# Import and register new API routers (simulation & receipt scanning)
+from app.api.simulation_endpoints import router as simulation_router
+from app.api.receipt_endpoints import router as receipt_router
+
+app.include_router(simulation_router)
+app.include_router(receipt_router)
+
 
 # ==================== Health Check ====================
 @app.get("/")

@@ -27,6 +27,7 @@ from .database import (
     # User Balance functions
     get_user_balance,
     initialize_user_balance,
+    set_opening_balance,
     update_user_balance,
     recalculate_user_balance,
     DB_PATH
@@ -62,6 +63,7 @@ __all__ = [
     # User Balance
     "get_user_balance",
     "initialize_user_balance",
+    "set_opening_balance",
     "update_user_balance",
     "recalculate_user_balance",
     "DB_PATH",

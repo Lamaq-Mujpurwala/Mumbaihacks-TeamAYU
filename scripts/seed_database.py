@@ -185,9 +185,15 @@ def seed_data():
     count = db.store_transactions(user_id, transactions)
     print(f"✅ Transactions Created: {count}")
     
-    # Recalculate and store user balance
+    # Set opening balance (the balance user had before tracking started)
+    # This represents money already in the account before these transactions
+    opening_balance = 500000  # ₹5 lakh opening balance
+    db.set_opening_balance(user_id, opening_balance)
+    print(f"✅ Opening Balance Set: ₹{opening_balance:,.2f}")
+    
+    # Recalculate and store user balance (will add opening_balance + income - expenses)
     balance_info = db.recalculate_user_balance(user_id)
-    print(f"✅ Balance Initialized: ₹{balance_info['current_balance']:,.2f}")
+    print(f"✅ Current Balance: ₹{balance_info['current_balance']:,.2f}")
 
     # 5. Set Budgets (Current Month)
     current_month = datetime.now().strftime("%Y-%m")

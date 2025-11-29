@@ -94,6 +94,7 @@ def get_current_balance(user_id: Union[int, str]) -> dict:
         
         return {
             "status": "success",
+            "opening_balance": round(balance_data.get('opening_balance', 0), 2),
             "current_balance": round(balance_data['current_balance'], 2),
             "total_income": round(balance_data['total_income'], 2),
             "total_expenses": round(balance_data['total_expenses'], 2),

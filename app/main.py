@@ -429,6 +429,7 @@ async def get_snapshot(user_id: int):
     # Get current balance from the user_balance table
     balance_data = db.get_user_balance(user_id)
     current_balance = balance_data['current_balance'] if balance_data else 0
+    opening_balance = balance_data.get('opening_balance', 0) if balance_data else 0
     total_income = balance_data['total_income'] if balance_data else 0
     total_expenses = balance_data['total_expenses'] if balance_data else 0
     
@@ -443,6 +444,7 @@ async def get_snapshot(user_id: int):
         "user_id": user_id,
         "month": month,
         "balance": {
+            "opening_balance": round(opening_balance, 2),
             "current_balance": round(current_balance, 2),
             "total_income": round(total_income, 2),
             "total_expenses": round(total_expenses, 2)
@@ -473,11 +475,34 @@ async def get_balance(user_id: int):
     
     return {
         "user_id": user_id,
+        "opening_balance": round(balance_data.get('opening_balance', 0), 2),
         "current_balance": round(balance_data['current_balance'], 2),
         "total_income": round(balance_data['total_income'], 2),
         "total_expenses": round(balance_data['total_expenses'], 2),
         "last_transaction_date": balance_data.get('last_transaction_date'),
         "last_updated": balance_data.get('last_updated')
+    }
+
+
+class OpeningBalanceRequest(BaseModel):
+    user_id: int
+    opening_balance: float
+
+
+@ui_router.post("/balance/opening")
+async def set_opening_balance(req: OpeningBalanceRequest):
+    """Set the opening balance for a user (balance before tracking started)"""
+    result = db.set_opening_balance(req.user_id, req.opening_balance)
+    
+    # Recalculate to get updated current balance
+    balance_data = db.recalculate_user_balance(req.user_id)
+    
+    return {
+        "status": "success",
+        "message": f"Opening balance set to ₹{req.opening_balance:,.2f}",
+        "user_id": req.user_id,
+        "opening_balance": round(req.opening_balance, 2),
+        "current_balance": round(balance_data['current_balance'], 2)
     }
 
 
@@ -490,6 +515,7 @@ async def recalculate_balance(user_id: int):
         "status": "success",
         "message": "Balance recalculated from all transactions",
         "user_id": user_id,
+        "opening_balance": round(balance_data.get('opening_balance', 0), 2),
         "current_balance": round(balance_data['current_balance'], 2),
         "total_income": round(balance_data['total_income'], 2),
         "total_expenses": round(balance_data['total_expenses'], 2)

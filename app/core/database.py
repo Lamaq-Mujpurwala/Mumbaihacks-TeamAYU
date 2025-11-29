@@ -185,10 +185,12 @@ def init_database():
         
         # User Balance table - stores current balance per user
         # This table is automatically updated when transactions are added
+        # opening_balance: The balance user had before starting to track (from bank sync or manual entry)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_balance (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER UNIQUE NOT NULL,
+                opening_balance REAL DEFAULT 0,
                 current_balance REAL DEFAULT 0,
                 total_income REAL DEFAULT 0,
                 total_expenses REAL DEFAULT 0,
@@ -605,9 +607,10 @@ def get_user_balance(user_id: int) -> dict:
         return None
 
 
-def initialize_user_balance(user_id: int, initial_balance: float = 0) -> int:
+def initialize_user_balance(user_id: int, opening_balance: float = 0) -> int:
     """
-    Initialize balance record for a new user.
+    Initialize balance record for a new user with an opening balance.
+    The opening_balance represents the money the user had before tracking started.
     Creates an entry in user_balance table if it doesn't exist.
     Returns the record id.
     """
@@ -617,14 +620,56 @@ def initialize_user_balance(user_id: int, initial_balance: float = 0) -> int:
         cursor.execute('SELECT id FROM user_balance WHERE user_id = ?', (user_id,))
         row = cursor.fetchone()
         if row:
+            # Update opening balance if record exists
+            cursor.execute('''
+                UPDATE user_balance 
+                SET opening_balance = ?, current_balance = opening_balance + total_income - total_expenses, last_updated = datetime('now')
+                WHERE user_id = ?
+            ''', (opening_balance, user_id))
             return row['id']
         
-        # Create new balance record
+        # Create new balance record with opening balance
         cursor.execute('''
-            INSERT INTO user_balance (user_id, current_balance, total_income, total_expenses, last_updated)
-            VALUES (?, ?, 0, 0, datetime('now'))
-        ''', (user_id, initial_balance))
+            INSERT INTO user_balance (user_id, opening_balance, current_balance, total_income, total_expenses, last_updated)
+            VALUES (?, ?, ?, 0, 0, datetime('now'))
+        ''', (user_id, opening_balance, opening_balance))
         return cursor.lastrowid
+
+
+def set_opening_balance(user_id: int, opening_balance: float) -> dict:
+    """
+    Set or update the opening balance for a user.
+    This is the balance the user had before they started tracking transactions.
+    The current_balance will be recalculated as: opening_balance + total_income - total_expenses
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        # Check if balance record exists
+        cursor.execute('SELECT id, total_income, total_expenses FROM user_balance WHERE user_id = ?', (user_id,))
+        row = cursor.fetchone()
+        
+        if row:
+            total_income = row['total_income'] or 0
+            total_expenses = row['total_expenses'] or 0
+            current_balance = opening_balance + total_income - total_expenses
+            
+            cursor.execute('''
+                UPDATE user_balance 
+                SET opening_balance = ?, current_balance = ?, last_updated = datetime('now')
+                WHERE user_id = ?
+            ''', (opening_balance, current_balance, user_id))
+        else:
+            cursor.execute('''
+                INSERT INTO user_balance (user_id, opening_balance, current_balance, total_income, total_expenses, last_updated)
+                VALUES (?, ?, ?, 0, 0, datetime('now'))
+            ''', (user_id, opening_balance, opening_balance))
+        
+        return {
+            'user_id': user_id,
+            'opening_balance': opening_balance,
+            'current_balance': current_balance if row else opening_balance
+        }
 
 
 def update_user_balance(user_id: int, amount: float, transaction_type: str, transaction_date: str = None):
@@ -641,19 +686,21 @@ def update_user_balance(user_id: int, amount: float, transaction_type: str, tran
         cursor = conn.cursor()
         
         # Ensure balance record exists
-        cursor.execute('SELECT id, current_balance, total_income, total_expenses FROM user_balance WHERE user_id = ?', (user_id,))
+        cursor.execute('SELECT id, opening_balance, current_balance, total_income, total_expenses FROM user_balance WHERE user_id = ?', (user_id,))
         row = cursor.fetchone()
         
         if not row:
-            # Initialize if doesn't exist
+            # Initialize if doesn't exist (with 0 opening balance)
             cursor.execute('''
-                INSERT INTO user_balance (user_id, current_balance, total_income, total_expenses, last_updated)
-                VALUES (?, 0, 0, 0, datetime('now'))
+                INSERT INTO user_balance (user_id, opening_balance, current_balance, total_income, total_expenses, last_updated)
+                VALUES (?, 0, 0, 0, 0, datetime('now'))
             ''', (user_id,))
+            opening_balance = 0
             current_balance = 0
             total_income = 0
             total_expenses = 0
         else:
+            opening_balance = row['opening_balance'] or 0
             current_balance = row['current_balance']
             total_income = row['total_income']
             total_expenses = row['total_expenses']
@@ -680,12 +727,18 @@ def update_user_balance(user_id: int, amount: float, transaction_type: str, tran
 
 def recalculate_user_balance(user_id: int) -> dict:
     """
-    Recalculate user balance from all transactions.
+    Recalculate user balance from all transactions, preserving opening_balance.
+    current_balance = opening_balance + total_income - total_expenses
     Useful for fixing inconsistencies or after bulk operations.
     Returns the updated balance info.
     """
     with get_db_connection() as conn:
         cursor = conn.cursor()
+        
+        # Get existing opening_balance (if any)
+        cursor.execute('SELECT opening_balance FROM user_balance WHERE user_id = ?', (user_id,))
+        existing = cursor.fetchone()
+        opening_balance = existing['opening_balance'] if existing else 0
         
         # Calculate totals from all transactions
         cursor.execute('''
@@ -701,13 +754,11 @@ def recalculate_user_balance(user_id: int) -> dict:
         total_income = row['total_income'] or 0
         total_expenses = row['total_expenses'] or 0
         last_date = row['last_date']
-        current_balance = total_income - total_expenses
+        # Current balance = opening balance + income - expenses
+        current_balance = opening_balance + total_income - total_expenses
         
         # Update or insert balance record
-        cursor.execute('SELECT id FROM user_balance WHERE user_id = ?', (user_id,))
-        exists = cursor.fetchone()
-        
-        if exists:
+        if existing:
             cursor.execute('''
                 UPDATE user_balance 
                 SET current_balance = ?, 
@@ -719,12 +770,13 @@ def recalculate_user_balance(user_id: int) -> dict:
             ''', (current_balance, total_income, total_expenses, last_date, user_id))
         else:
             cursor.execute('''
-                INSERT INTO user_balance (user_id, current_balance, total_income, total_expenses, last_transaction_date, last_updated)
-                VALUES (?, ?, ?, ?, ?, datetime('now'))
-            ''', (user_id, current_balance, total_income, total_expenses, last_date))
+                INSERT INTO user_balance (user_id, opening_balance, current_balance, total_income, total_expenses, last_transaction_date, last_updated)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            ''', (user_id, opening_balance, current_balance, total_income, total_expenses, last_date))
         
         return {
             'user_id': user_id,
+            'opening_balance': opening_balance,
             'current_balance': current_balance,
             'total_income': total_income,
             'total_expenses': total_expenses,

@@ -380,3 +380,19 @@ async def process_query(user_id: int, query: str) -> dict:
         "agents_used": result.get("completed_agents", []),
         "agent_outputs": result.get("agent_outputs", {})
     }
+
+
+async def process_query_multilingual(user_id: int, query: str) -> dict:
+    """
+    Multilingual entry point - auto-detects language and handles translation.
+    Supports 14+ Indian languages including Hinglish.
+    
+    Args:
+        user_id: The user's ID
+        query: Natural language query in any supported language
+        
+    Returns:
+        Dict with 'response' (in detected language) and metadata
+    """
+    from app.core.translation import process_multilingual_query
+    return await process_multilingual_query(user_id, query, process_query)

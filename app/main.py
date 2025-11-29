@@ -143,9 +143,10 @@ async def chat_message(request: ChatRequest):
     """
     Main user interaction endpoint.
     Routes through LangGraph supervisor to appropriate agents.
+    Supports 14+ Indian languages with auto-detection.
     """
     try:
-        from app.langgraph_agents.supervisor import process_query
+        from app.langgraph_agents.supervisor import process_query_multilingual
         
         # Get user_id from phone_number or direct
         user_id = request.user_id
@@ -158,7 +159,7 @@ async def chat_message(request: ChatRequest):
                 success=False
             )
         
-        result = await process_query(user_id=user_id, query=request.message)
+        result = await process_query_multilingual(user_id=user_id, query=request.message)
         
         return ChatResponse(
             response=result["response"],

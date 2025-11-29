@@ -35,5 +35,8 @@ pandas
 # ===== Image Processing (Receipt Scanning) =====
 pillow
 
+# ===== Language Detection (Multilingual Support) =====
+langdetect
+
 # ===== Optional: For Analytics =====
 scikit-learn

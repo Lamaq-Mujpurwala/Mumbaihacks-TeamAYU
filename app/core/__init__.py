@@ -19,9 +19,16 @@ from .database import (
     delete_goal,
     add_manual_transaction,
     get_or_create_category,
+    find_matching_category,
+    get_user_categories,
     get_cached_insight,
     save_insight,
     get_latest_financial_data,
+    # User Balance functions
+    get_user_balance,
+    initialize_user_balance,
+    update_user_balance,
+    recalculate_user_balance,
     DB_PATH
 )
 
@@ -47,9 +54,16 @@ __all__ = [
     "delete_goal",
     "add_manual_transaction",
     "get_or_create_category",
+    "find_matching_category",
+    "get_user_categories",
     "get_cached_insight",
     "save_insight",
     "get_latest_financial_data",
+    # User Balance
+    "get_user_balance",
+    "initialize_user_balance",
+    "update_user_balance",
+    "recalculate_user_balance",
     "DB_PATH",
     # LLM
     "llm_client",

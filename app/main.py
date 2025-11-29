@@ -261,7 +261,7 @@ async def get_budgets(user_id: int, month: Optional[str] = None):
                 FROM transactions 
                 WHERE user_id = ? AND category_id = ? 
                 AND strftime('%Y-%m', transaction_date) = ? 
-                AND type = 'expense'
+                AND type IN ('DEBIT', 'debit', 'expense')
             """, (user_id, cat_id, month))
             
             row = cursor.fetchone()
@@ -426,6 +426,12 @@ async def get_snapshot(user_id: int):
     loans = db.get_user_loans(user_id)
     credit_cards = db.get_user_credit_cards(user_id)
     
+    # Get current balance from the user_balance table
+    balance_data = db.get_user_balance(user_id)
+    current_balance = balance_data['current_balance'] if balance_data else 0
+    total_income = balance_data['total_income'] if balance_data else 0
+    total_expenses = balance_data['total_expenses'] if balance_data else 0
+    
     # Calculate totals
     total_goals_target = sum(g['target_amount'] for g in goals)
     total_goals_saved = sum(g['current_amount'] for g in goals)
@@ -436,6 +442,11 @@ async def get_snapshot(user_id: int):
     return {
         "user_id": user_id,
         "month": month,
+        "balance": {
+            "current_balance": round(current_balance, 2),
+            "total_income": round(total_income, 2),
+            "total_expenses": round(total_expenses, 2)
+        },
         "summary": {
             "goals_count": len(goals),
             "goals_progress": f"Rs.{total_goals_saved:,.0f} / Rs.{total_goals_target:,.0f}",
@@ -448,6 +459,40 @@ async def get_snapshot(user_id: int):
         "recent_transactions": transactions,
         "loans": loans,
         "credit_cards": credit_cards
+    }
+
+
+@ui_router.get("/balance")
+async def get_balance(user_id: int):
+    """Get user's current balance from the balance table"""
+    balance_data = db.get_user_balance(user_id)
+    
+    if not balance_data:
+        # Recalculate if no balance record exists
+        balance_data = db.recalculate_user_balance(user_id)
+    
+    return {
+        "user_id": user_id,
+        "current_balance": round(balance_data['current_balance'], 2),
+        "total_income": round(balance_data['total_income'], 2),
+        "total_expenses": round(balance_data['total_expenses'], 2),
+        "last_transaction_date": balance_data.get('last_transaction_date'),
+        "last_updated": balance_data.get('last_updated')
+    }
+
+
+@ui_router.post("/balance/recalculate")
+async def recalculate_balance(user_id: int):
+    """Force recalculation of user balance from all transactions"""
+    balance_data = db.recalculate_user_balance(user_id)
+    
+    return {
+        "status": "success",
+        "message": "Balance recalculated from all transactions",
+        "user_id": user_id,
+        "current_balance": round(balance_data['current_balance'], 2),
+        "total_income": round(balance_data['total_income'], 2),
+        "total_expenses": round(balance_data['total_expenses'], 2)
     }
 
 

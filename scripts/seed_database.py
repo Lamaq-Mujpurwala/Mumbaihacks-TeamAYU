@@ -184,6 +184,10 @@ def seed_data():
     # Store transactions
     count = db.store_transactions(user_id, transactions)
     print(f"✅ Transactions Created: {count}")
+    
+    # Recalculate and store user balance
+    balance_info = db.recalculate_user_balance(user_id)
+    print(f"✅ Balance Initialized: ₹{balance_info['current_balance']:,.2f}")
 
     # 5. Set Budgets (Current Month)
     current_month = datetime.now().strftime("%Y-%m")
